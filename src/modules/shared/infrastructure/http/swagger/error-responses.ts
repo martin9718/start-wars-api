@@ -1,0 +1,27 @@
+export const ERROR_RESPONSES = {
+  VALIDATION_ERROR: {
+    errorCodeName: 'VALIDATION_ERROR',
+    message: 'Validation failed',
+    details: 'email must be valid, password must be at least 8 characters long',
+    status: 400,
+  },
+  USER_ALREADY_EXISTS: {
+    errorCodeName: 'USER_ALREADY_EXISTS',
+    message: 'User Already Exists',
+    details:
+      'A user with email john.doe@example.com already exists in the system',
+    status: 409,
+  },
+  INVALID_ROLE: {
+    errorCodeName: 'INVALID_ROLE',
+    message: 'Invalid Role',
+    details: 'The role id: 999 is not valid. Valid roles are: 1, 2',
+    status: 400,
+  },
+  INTERNAL_SERVER_ERROR: {
+    errorCodeName: 'INTERNAL_SERVER_ERROR',
+    message: 'An unexpected error occurred',
+    details: 'Error processing the request on the server',
+    status: 500,
+  },
+};

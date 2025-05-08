@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApplicationError } from '../../../domain/errors/application-error';
+import { DatabaseError } from '../../database/errors/database-error';
 
 interface ExceptionResponse {
   statusCode?: number;
@@ -24,7 +25,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let statusCode: HttpStatus;
     let responseBody: Record<string, unknown>;
 
-    if (exception instanceof ApplicationError) {
+    if (
+      exception instanceof ApplicationError &&
+      !(exception instanceof DatabaseError)
+    ) {
       statusCode = exception.status;
       responseBody = {
         errorCodeName: exception.codeName,
