@@ -24,4 +24,17 @@ export const ERROR_RESPONSES = {
     details: 'Error processing the request on the server',
     status: 500,
   },
+  INVALID_CREDENTIALS: {
+    errorCodeName: 'INVALID_CREDENTIALS',
+    message: 'Invalid email or password',
+    details: 'The provided credentials are incorrect',
+    status: 401,
+  },
+
+  USER_NOT_ACTIVE: {
+    errorCodeName: 'USER_NOT_ACTIVE',
+    message: 'User not active',
+    details: 'The user account is not active',
+    status: 409,
+  },
 };
