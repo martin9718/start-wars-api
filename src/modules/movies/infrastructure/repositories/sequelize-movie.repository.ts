@@ -160,6 +160,41 @@ export class SequelizeMovieRepository implements MovieRepository {
     }
   }
 
+  async update(id: string, movieData: Partial<Movie>): Promise<Movie | null> {
+    try {
+      const modelProps = {
+        title: movieData.title,
+        episode_id: movieData.episodeId,
+        opening_crawl: movieData.openingCrawl,
+        director: movieData.director,
+        producer: movieData.producer,
+        release_date: movieData.releaseDate,
+        url: movieData.url,
+        external_id: movieData.externalId,
+      };
+
+      const filteredProps = Object.fromEntries(
+        Object.entries(modelProps).filter(([, value]) => value !== undefined),
+      );
+
+      const [affectedCount] = await this.movieModel.update(filteredProps, {
+        where: { id },
+      });
+
+      if (affectedCount === 0) {
+        return null;
+      }
+
+      const updatedMovie = await this.movieModel.findByPk(id);
+
+      if (!updatedMovie) return null;
+
+      return this.buildMovieEntity(updatedMovie);
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
+
   private buildMovieEntity(model: MovieModel): Movie {
     return Movie.create({
       id: model.id,

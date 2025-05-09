@@ -285,6 +285,107 @@ describe('SequelizeMovieRepository (Integration)', () => {
     });
   });
 
+  describe('update', () => {
+    it('should update a movie successfully', async () => {
+      const movieData = MovieFactory.createMovieModels()[0];
+      const createdMovie = await MovieModel.create(movieData);
+
+      const updateData: Partial<Movie> = {
+        title: 'Updated Title',
+        director: 'New Director',
+        producer: 'New Producer',
+        releaseDate: new Date('2023-05-15'),
+      };
+
+      const result = await repository.update(createdMovie.id, updateData);
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(createdMovie.id);
+      expect(result?.title).toBe('Updated Title');
+      expect(result?.director).toBe('New Director');
+      expect(result?.producer).toBe('New Producer');
+
+      expect(result?.episodeId).toBe(4);
+      expect(result?.externalId).toBe('1');
+    });
+
+    it('should update only specified fields', async () => {
+      const movieData = MovieFactory.createMovieModels()[1];
+      const createdMovie = await MovieModel.create(movieData);
+
+      const updateData: Partial<Movie> = {
+        title: 'Only Title Updated',
+      };
+
+      const result = await repository.update(createdMovie.id, updateData);
+
+      expect(result).not.toBeNull();
+      expect(result?.title).toBe('Only Title Updated');
+
+      expect(result?.director).toBe('Irvin Kershner');
+      expect(result?.producer).toBe('Gary Kurtz, Rick McCallum');
+      expect(result?.episodeId).toBe(5);
+
+      const updatedInDb = await MovieModel.findByPk(createdMovie.id);
+      expect(updatedInDb?.title).toBe('Only Title Updated');
+      expect(updatedInDb?.director).toBe('Irvin Kershner');
+    });
+
+    it('should return null if movie with ID does not exist', async () => {
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
+
+      const updateData: Partial<Movie> = {
+        title: 'This Update Should Fail',
+      };
+
+      const result = await repository.update(nonExistentId, updateData);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw DatabaseError if database operation fails', async () => {
+      const movieData = MovieFactory.createMovieModels()[0];
+      const createdMovie = await MovieModel.create(movieData);
+
+      const updateData: Partial<Movie> = {
+        title: 'Failed Update Test',
+      };
+
+      jest.spyOn(MovieModel, 'update').mockImplementationOnce(() => {
+        throw new Error('Database connection error');
+      });
+
+      await expect(
+        repository.update(createdMovie.id, updateData),
+      ).rejects.toThrow(DatabaseError);
+    });
+
+    it('should not update fields that are undefined', async () => {
+      const movieData = MovieFactory.createMovieModels()[2];
+      const createdMovie = await MovieModel.create(movieData);
+
+      const updateData: Partial<Movie> = {
+        title: 'Specific Update',
+        director: undefined,
+        producer: undefined,
+      };
+
+      const result = await repository.update(createdMovie.id, updateData);
+
+      expect(result).not.toBeNull();
+      expect(result?.title).toBe('Specific Update');
+
+      expect(result?.director).toBe('Richard Marquand');
+      expect(result?.producer).toBe(
+        'Howard G. Kazanjian, George Lucas, Rick McCallum',
+      );
+
+      const updatedInDb = await MovieModel.findByPk(createdMovie.id);
+      expect(updatedInDb?.title).toBe('Specific Update');
+      expect(updatedInDb?.director).toBe('Richard Marquand');
+    });
+  });
+
   describe('buildMovieEntity', () => {
     it('should correctly map MovieModel to Movie domain entity', async () => {
       const modelData = MovieFactory.createMovieModels()[2];
