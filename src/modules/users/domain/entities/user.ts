@@ -47,6 +47,10 @@ export class User {
     );
   }
 
+  hasRole(roleName: string): boolean {
+    return this.role.name.toLowerCase() === roleName.toLowerCase();
+  }
+
   toResponse(): Omit<UserProperties, 'password'> {
     return {
       id: this.id,

@@ -43,4 +43,16 @@ export const ERROR_RESPONSES = {
     details: 'Failed to communicate with the Star Wars API',
     status: 503,
   },
+  FORBIDDEN: {
+    errorCodeName: 'FORBIDDEN',
+    message: 'Access denied',
+    details: 'You do not have the required permissions to access this resource',
+    status: 403,
+  },
+  UNAUTHORIZED: {
+    errorCodeName: 'UNAUTHORIZED_ERROR',
+    message: 'User does not have access to do this action',
+    details: 'User does not have access to do this action',
+    status: 401,
+  },
 };

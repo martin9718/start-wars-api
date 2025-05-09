@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LoginController } from './infrastructure/http/login/login.controller';
+import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LoginController } from './infrastructure/http/login/login.controller';
     }),
   ],
   providers: [
+    JwtStrategy,
     {
       provide: PasswordHasher,
       useClass: BcryptPasswordHasher,

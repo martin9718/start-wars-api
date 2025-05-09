@@ -5,11 +5,19 @@ import { MovieExternalService } from '../../../domain/services/movie-external-se
 import { MovieModel } from '../../../../shared/infrastructure/database/models/movie.model';
 import { MovieExternalServiceError } from '../../../domain/errors/movie-external-service-error';
 import { SyncMoviesUseCase } from '../../../application/use-cases/sync-movies/sync-movies.use-case';
+import { JwtService } from '@nestjs/jwt';
+import { UserRepository } from '../../../../users/domain/repositories/user.repository';
+import { User } from '../../../../users/domain/entities/user';
+import { ROLES } from '../../../../users/domain/types';
+import { UserModel } from '../../../../shared/infrastructure/database/models/user.model';
+import { RoleModel } from '../../../../shared/infrastructure/database/models/role.model';
 
 describe('SyncMoviesController (E2E)', () => {
   let app: INestApplication;
   let testHelper: TestHelper;
   let movieExternalService: MovieExternalService;
+  let jwtService: JwtService;
+  let userRepository: UserRepository;
 
   const mockMoviesData = [
     {
@@ -38,12 +46,18 @@ describe('SyncMoviesController (E2E)', () => {
     },
   ];
 
+  let adminToken: string;
+  let userToken: string;
+  let adminUser: User;
+
   beforeAll(async () => {
     testHelper = new TestHelper();
     await testHelper.init();
     app = testHelper.getApp();
 
     movieExternalService = app.get(MovieExternalService);
+    jwtService = app.get(JwtService);
+    userRepository = app.get(UserRepository);
   });
 
   beforeEach(async () => {
@@ -52,6 +66,43 @@ describe('SyncMoviesController (E2E)', () => {
     jest
       .spyOn(movieExternalService, 'fetchAllMovies')
       .mockResolvedValue(mockMoviesData);
+
+    await RoleModel.bulkCreate([
+      { id: ROLES.ADMIN.id, name: ROLES.ADMIN.name },
+      { id: ROLES.USER.id, name: ROLES.USER.name },
+    ]);
+
+    const adminUserModel = await UserModel.create({
+      name: 'Admin User',
+      email: 'admin@example.com',
+      password: 'hashedpassword',
+      is_active: true,
+      role_id: ROLES.ADMIN.id,
+    });
+
+    const regularUserModel = await UserModel.create({
+      name: 'Regular User',
+      email: 'user@example.com',
+      password: 'hashedpassword',
+      is_active: true,
+      role_id: ROLES.USER.id,
+    });
+
+    adminToken = jwtService.sign({
+      sub: adminUserModel.id,
+      email: adminUserModel.email,
+    });
+
+    userToken = jwtService.sign({
+      sub: regularUserModel.id,
+      email: regularUserModel.email,
+    });
+
+    const adminUserResult = await userRepository.findById(adminUserModel.id);
+    if (!adminUserResult) {
+      throw new Error('Failed to create admin user for tests');
+    }
+    adminUser = adminUserResult;
   });
 
   afterAll(async () => {
@@ -59,9 +110,10 @@ describe('SyncMoviesController (E2E)', () => {
     await testHelper.close();
   });
 
-  it('should synchronize movies and return success response', async () => {
+  it('should synchronize movies and return success response when admin is authenticated', async () => {
     const response = await request(app.getHttpServer())
       .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     expect(response.body).toHaveProperty('success', true);
@@ -84,6 +136,7 @@ describe('SyncMoviesController (E2E)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     expect(response.body.count).toBe(2);
@@ -96,6 +149,7 @@ describe('SyncMoviesController (E2E)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     expect(response.body).toHaveProperty('success', true);
@@ -116,6 +170,7 @@ describe('SyncMoviesController (E2E)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(503);
 
     expect(response.body).toHaveProperty(
@@ -136,6 +191,7 @@ describe('SyncMoviesController (E2E)', () => {
 
     const response = await request(app.getHttpServer())
       .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(500);
 
     expect(response.body).toHaveProperty(
@@ -144,5 +200,56 @@ describe('SyncMoviesController (E2E)', () => {
     );
     expect(response.body.message).toBe('An unexpected error occurred');
     expect(response.body.details).toBe('Unexpected database failure');
+  });
+
+  it('should return 401 Unauthorized when no token is provided', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/movies/sync')
+      .expect(401);
+
+    expect(response.body).toHaveProperty('errorCodeName', 'TOKEN_NOT_PROVIDED');
+    expect(response.body.message).toBe('Token not provided');
+    expect(response.body.status).toBe(401);
+  });
+
+  it('should return 401 Unauthorized when an invalid token is provided', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/movies/sync')
+      .set('Authorization', 'Bearer invalid-token')
+      .expect(401);
+
+    expect(response.body).toHaveProperty('errorCodeName', 'INVALID_TOKEN');
+  });
+
+  it('should return 403 Forbidden when user does not have required role', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${userToken}`)
+      .expect(403);
+
+    expect(response.body).toHaveProperty('errorCodeName', 'FORBIDDEN');
+    expect(response.body.message).toBe(
+      'User does not have required permissions',
+    );
+    expect(response.body.status).toBe(403);
+  });
+
+  it('should return 401 Unauthorized when token is expired', async () => {
+    const expiredToken = jwtService.sign(
+      {
+        sub: adminUser.id,
+        email: adminUser.email,
+      },
+      { expiresIn: '0s' },
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const response = await request(app.getHttpServer())
+      .post('/api/movies/sync')
+      .set('Authorization', `Bearer ${expiredToken}`)
+      .expect(401);
+
+    expect(response.body).toHaveProperty('errorCodeName', 'TOKEN_EXPIRED');
   });
 });
