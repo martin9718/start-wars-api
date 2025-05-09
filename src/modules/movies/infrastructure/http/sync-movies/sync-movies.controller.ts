@@ -12,6 +12,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiServiceUnavailableResponse,
   ApiForbiddenResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { SyncMoviesUseCase } from '../../../application/use-cases/sync-movies/sync-movies.use-case';
 import { ERROR_RESPONSES } from '../../../../shared/infrastructure/http/swagger/error-responses';
@@ -56,6 +57,7 @@ export class SyncMoviesController {
       example: ERROR_RESPONSES.EXTERNAL_SERVICE_ERROR,
     },
   })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RoleGuard)
   @RequiredRoles(ROLES.ADMIN.name)
   @HttpCode(HttpStatus.OK)

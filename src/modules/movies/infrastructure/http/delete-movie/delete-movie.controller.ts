@@ -14,6 +14,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ERROR_RESPONSES } from '../../../../shared/infrastructure/http/swagger/error-responses';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/jwt.guard';
@@ -60,6 +61,7 @@ export class DeleteMovieController {
       example: ERROR_RESPONSES.INTERNAL_SERVER_ERROR,
     },
   })
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RoleGuard)
   @RequiredRoles(ROLES.ADMIN.name)
   @HttpCode(HttpStatus.NO_CONTENT)
