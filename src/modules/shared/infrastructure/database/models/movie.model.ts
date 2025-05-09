@@ -5,10 +5,12 @@ import {
   DataType,
   CreatedAt,
   UpdatedAt,
+  DeletedAt,
 } from 'sequelize-typescript';
 
 @Table({
   tableName: 'movies',
+  paranoid: true,
 })
 export class MovieModel extends Model {
   @Column({
@@ -72,4 +74,7 @@ export class MovieModel extends Model {
 
   @UpdatedAt
   declare updated_at: Date;
+
+  @DeletedAt
+  declare deleted_at: Date;
 }

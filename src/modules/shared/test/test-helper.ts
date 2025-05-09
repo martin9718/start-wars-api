@@ -36,6 +36,11 @@ export class TestHelper {
 
   async clearDatabase(): Promise<void> {
     await this.sequelize.truncate({ cascade: true });
+    await this.sequelize.model('MovieModel')?.destroy({
+      where: {},
+      force: true,
+      truncate: true,
+    });
   }
 
   async close(): Promise<void> {

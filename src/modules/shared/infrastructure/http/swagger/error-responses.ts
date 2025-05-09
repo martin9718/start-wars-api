@@ -2,7 +2,9 @@ export const ERROR_RESPONSES = {
   VALIDATION_ERROR: {
     errorCodeName: 'VALIDATION_ERROR',
     message: 'Validation failed',
-    details: 'email must be valid, password must be at least 8 characters long',
+    details: [
+      'email must be valid, password must be at least 8 characters long',
+    ],
     status: 400,
   },
   USER_ALREADY_EXISTS: {

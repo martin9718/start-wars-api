@@ -15,6 +15,7 @@ export class MovieFactory {
         externalId: '1',
         createdAt: new Date('2023-01-01'),
         updatedAt: new Date('2023-01-01'),
+        deletedAt: undefined,
       }),
       Movie.create({
         id: '2',
@@ -28,6 +29,7 @@ export class MovieFactory {
         externalId: '2',
         createdAt: new Date('2023-01-01'),
         updatedAt: new Date('2023-01-01'),
+        deletedAt: undefined,
       }),
       Movie.create({
         id: '3',
@@ -41,6 +43,7 @@ export class MovieFactory {
         externalId: '3',
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: undefined,
       }),
     ];
   }
@@ -60,6 +63,7 @@ export class MovieFactory {
       externalId: '1',
       createdAt: new Date('2023-01-01'),
       updatedAt: new Date('2023-01-01'),
+      deletedAt: undefined,
     };
 
     return Movie.create({

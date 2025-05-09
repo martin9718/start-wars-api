@@ -10,6 +10,7 @@ export interface MovieProperties {
   externalId?: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 export class Movie {
@@ -25,6 +26,7 @@ export class Movie {
     readonly createdAt: Date,
     readonly updatedAt: Date,
     readonly id?: string,
+    readonly deletedAt?: Date,
   ) {}
 
   static create(props: {
@@ -39,6 +41,7 @@ export class Movie {
     id?: string;
     createdAt?: Date;
     updatedAt?: Date;
+    deletedAt?: Date;
   }): Movie {
     const now = new Date();
 
@@ -54,6 +57,7 @@ export class Movie {
       props.createdAt || now,
       props.updatedAt || now,
       props.id,
+      props.deletedAt,
     );
   }
 
@@ -70,6 +74,7 @@ export class Movie {
       externalId: this.externalId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      deletedAt: this.deletedAt,
     };
   }
 }

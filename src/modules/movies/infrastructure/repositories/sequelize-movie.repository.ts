@@ -195,6 +195,19 @@ export class SequelizeMovieRepository implements MovieRepository {
     }
   }
 
+  async softDelete(id: string): Promise<boolean> {
+    try {
+      const result = await this.movieModel.destroy({
+        where: { id },
+        force: false,
+      });
+
+      return result > 0;
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
+
   private buildMovieEntity(model: MovieModel): Movie {
     return Movie.create({
       id: model.id,
@@ -208,6 +221,7 @@ export class SequelizeMovieRepository implements MovieRepository {
       externalId: model.external_id,
       createdAt: model.created_at,
       updatedAt: model.updated_at,
+      deletedAt: model.deleted_at,
     });
   }
 }

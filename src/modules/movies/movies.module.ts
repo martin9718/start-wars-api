@@ -17,6 +17,8 @@ import { CreateMovieController } from './infrastructure/http/create-movie/create
 import { CreateMovieUseCase } from './application/use-cases/create-movie/create-movie.use-case';
 import { UpdateMovieUseCase } from './application/use-cases/update-movie/update-movie.use-case';
 import { UpdateMovieController } from './infrastructure/http/update-movie/update-movie.controller';
+import { DeleteMovieUseCase } from './application/use-cases/delete-movie/delete-movie.use-case';
+import { DeleteMovieController } from './infrastructure/http/delete-movie/delete-movie.controller';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { UpdateMovieController } from './infrastructure/http/update-movie/update
     FindByIdUseCase,
     CreateMovieUseCase,
     UpdateMovieUseCase,
+    DeleteMovieUseCase,
   ],
   controllers: [
     SyncMoviesController,
@@ -48,6 +51,7 @@ import { UpdateMovieController } from './infrastructure/http/update-movie/update
     FindMovieByIdController,
     CreateMovieController,
     UpdateMovieController,
+    DeleteMovieController,
   ],
   exports: [MovieRepository],
 })

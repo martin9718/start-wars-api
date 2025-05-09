@@ -386,6 +386,47 @@ describe('SequelizeMovieRepository (Integration)', () => {
     });
   });
 
+  describe('softDelete', () => {
+    it('should soft delete a movie successfully', async () => {
+      const movieData = MovieFactory.createMovieModels()[0];
+      const createdMovie = await MovieModel.create(movieData);
+
+      const movieBeforeSoftDelete = await MovieModel.findByPk(createdMovie.id);
+      expect(movieBeforeSoftDelete).not.toBeNull();
+
+      const result = await repository.softDelete(createdMovie.id);
+
+      expect(result).toBe(true);
+
+      const movieAfterSoftDelete = await MovieModel.findByPk(createdMovie.id);
+      expect(movieAfterSoftDelete).toBeNull();
+
+      const movieWithParanoid = await MovieModel.findByPk(createdMovie.id, {
+        paranoid: false,
+      });
+      expect(movieWithParanoid).not.toBeNull();
+      expect(movieWithParanoid?.deleted_at).not.toBeNull();
+    });
+
+    it('should return false if movie with ID does not exist', async () => {
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
+
+      const result = await repository.softDelete(nonExistentId);
+
+      expect(result).toBe(false);
+    });
+
+    it('should throw DatabaseError if database operation fails', async () => {
+      jest.spyOn(MovieModel, 'destroy').mockImplementationOnce(() => {
+        throw new Error('Database connection error');
+      });
+
+      await expect(repository.softDelete('any-id')).rejects.toThrow(
+        DatabaseError,
+      );
+    });
+  });
+
   describe('buildMovieEntity', () => {
     it('should correctly map MovieModel to Movie domain entity', async () => {
       const modelData = MovieFactory.createMovieModels()[2];
