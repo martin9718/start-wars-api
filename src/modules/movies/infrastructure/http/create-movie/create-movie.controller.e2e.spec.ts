@@ -82,7 +82,6 @@ describe('CreateMovieController (E2E)', () => {
       producer: 'Rick McCallum',
       releaseDate: '2002-05-16',
       url: 'https://example.com/attack-of-clones',
-      externalId: 'ep2',
     };
 
     const response = await request(app.getHttpServer())
@@ -96,7 +95,6 @@ describe('CreateMovieController (E2E)', () => {
       'url',
       'https://example.com/attack-of-clones',
     );
-    expect(response.body).toHaveProperty('externalId', 'ep2');
   });
 
   it('should return 403 when user is not admin', async () => {

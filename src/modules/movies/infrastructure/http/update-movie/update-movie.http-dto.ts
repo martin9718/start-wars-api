@@ -71,13 +71,4 @@ export class UpdateMovieHttpDto {
   @IsString()
   @IsOptional()
   url?: string;
-
-  @ApiProperty({
-    description: 'External ID for the movie',
-    example: 'ext-123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  externalId?: string;
 }

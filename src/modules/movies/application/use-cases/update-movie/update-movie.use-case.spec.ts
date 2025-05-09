@@ -38,7 +38,6 @@ describe('UpdateMovieUseCase', () => {
       producer: 'Original Producer',
       releaseDate: new Date('2022-01-01'),
       url: 'https://example.com/original',
-      externalId: 'ext-123',
     });
 
     const updateDto = {
@@ -100,7 +99,6 @@ describe('UpdateMovieUseCase', () => {
       producer: 'Original Producer',
       releaseDate: new Date('2022-01-01'),
       url: 'https://example.com/original',
-      externalId: 'ext-123',
     });
 
     const updateDto = {

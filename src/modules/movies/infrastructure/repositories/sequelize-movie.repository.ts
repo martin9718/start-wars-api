@@ -149,7 +149,6 @@ export class SequelizeMovieRepository implements MovieRepository {
         producer: movie.producer,
         release_date: movie.releaseDate,
         url: movie.url,
-        external_id: movie.externalId,
       };
 
       const model = await this.movieModel.create(modelProps);
@@ -170,7 +169,6 @@ export class SequelizeMovieRepository implements MovieRepository {
         producer: movieData.producer,
         release_date: movieData.releaseDate,
         url: movieData.url,
-        external_id: movieData.externalId,
       };
 
       const filteredProps = Object.fromEntries(

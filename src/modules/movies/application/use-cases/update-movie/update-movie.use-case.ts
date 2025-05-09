@@ -12,7 +12,6 @@ export interface UpdateMovieDto {
   producer?: string;
   releaseDate?: Date;
   url?: string;
-  externalId?: string;
 }
 
 @Injectable()

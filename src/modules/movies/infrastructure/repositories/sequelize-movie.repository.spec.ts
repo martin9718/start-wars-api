@@ -252,7 +252,6 @@ describe('SequelizeMovieRepository (Integration)', () => {
         producer: 'Test Producer',
         releaseDate: new Date('2023-01-01'),
         url: 'https://example.com/new-movie',
-        externalId: 'test-external-id-new',
       });
 
       const result = await repository.create(movieToCreate);
@@ -262,7 +261,6 @@ describe('SequelizeMovieRepository (Integration)', () => {
       expect(result.title).toBe('New Test Movie');
       expect(result.episodeId).toBe(8);
       expect(result.director).toBe('Test Director');
-      expect(result.externalId).toBe('test-external-id-new');
 
       const movieInDb = await MovieModel.findOne({
         where: { title: 'New Test Movie' },

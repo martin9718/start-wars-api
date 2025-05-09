@@ -10,7 +10,6 @@ export interface CreateMovieDto {
   producer: string;
   releaseDate: Date;
   url?: string;
-  externalId?: string;
 }
 
 @Injectable()
@@ -26,7 +25,6 @@ export class CreateMovieUseCase {
       producer: dto.producer,
       releaseDate: dto.releaseDate,
       url: dto.url || '',
-      externalId: dto.externalId,
     });
 
     return this.movieRepository.create(movie);

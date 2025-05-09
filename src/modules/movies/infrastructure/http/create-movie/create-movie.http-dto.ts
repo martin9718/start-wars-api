@@ -64,13 +64,4 @@ export class CreateMovieHttpDto {
   @IsString()
   @IsOptional()
   url?: string;
-
-  @ApiProperty({
-    description: 'External ID for the movie (optional)',
-    example: 'ext-123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  externalId?: string;
 }

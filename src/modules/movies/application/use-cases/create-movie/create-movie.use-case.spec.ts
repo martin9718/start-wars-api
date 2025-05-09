@@ -37,7 +37,6 @@ describe('CreateMovieUseCase', () => {
       producer: 'Rick McCallum',
       releaseDate: new Date('1999-05-19'),
       url: 'https://example.com/phantom-menace',
-      externalId: 'ep1',
     };
 
     const createdMovie = MovieFactory.createMovie({
@@ -49,7 +48,6 @@ describe('CreateMovieUseCase', () => {
       producer: createMovieDto.producer,
       releaseDate: createMovieDto.releaseDate,
       url: createMovieDto.url,
-      externalId: createMovieDto.externalId,
     });
 
     movieRepository.create.mockResolvedValue(createdMovie);
@@ -61,7 +59,6 @@ describe('CreateMovieUseCase', () => {
     expect(result.title).toBe('The Phantom Menace');
     expect(result.episodeId).toBe(1);
     expect(result.url).toBe('https://example.com/phantom-menace');
-    expect(result.externalId).toBe('ep1');
 
     expect(movieRepository.create).toHaveBeenCalledTimes(1);
 
