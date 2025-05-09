@@ -19,7 +19,8 @@
     "test:watch": "NODE_ENV=testing jest --watch",
     "test:cov": "NODE_ENV=testing jest --coverage",
     "test:debug": "NODE_ENV=testing node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
