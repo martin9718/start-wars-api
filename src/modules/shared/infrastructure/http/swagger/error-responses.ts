@@ -37,4 +37,10 @@ export const ERROR_RESPONSES = {
     details: 'The user account is not active',
     status: 409,
   },
+  EXTERNAL_SERVICE_ERROR: {
+    errorCodeName: 'EXTERNAL_SERVICE_ERROR',
+    message: 'External service error',
+    details: 'Failed to communicate with the Star Wars API',
+    status: 503,
+  },
 };
