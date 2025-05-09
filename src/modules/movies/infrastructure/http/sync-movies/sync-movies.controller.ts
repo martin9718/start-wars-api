@@ -11,16 +11,15 @@ import {
   ApiOkResponse,
   ApiInternalServerErrorResponse,
   ApiServiceUnavailableResponse,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
 } from '@nestjs/swagger';
 import { SyncMoviesUseCase } from '../../../application/use-cases/sync-movies/sync-movies.use-case';
 import { ERROR_RESPONSES } from '../../../../shared/infrastructure/http/swagger/error-responses';
-import { SyncMoviesResponseDto } from '../../../application/use-cases/sync-movies/sync-movies-response.http-dto';
+import { SyncMoviesResponseDto } from './sync-movies-response.http-dto';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/jwt.guard';
 import { RoleGuard } from '../../../../auth/infrastructure/guards/role.guard';
 import { RequiredRoles } from '../../../../auth/infrastructure/decorators/roles.decorator';
 import { ROLES } from '../../../../users/domain/types';
+import { ApiAuthErrors } from '../../../../shared/infrastructure/http/swagger/decorators/api-auth-errors.decorator';
 
 @ApiTags('movies')
 @Controller('movies')
@@ -36,18 +35,7 @@ export class SyncMoviesController {
     description: 'Movies synchronized successfully',
     type: SyncMoviesResponseDto,
   })
-  @ApiUnauthorizedResponse({
-    description: 'User is not authenticated',
-    schema: {
-      example: ERROR_RESPONSES.UNAUTHORIZED,
-    },
-  })
-  @ApiForbiddenResponse({
-    description: 'User does not have required permissions',
-    schema: {
-      example: ERROR_RESPONSES.FORBIDDEN,
-    },
-  })
+  @ApiAuthErrors()
   @ApiInternalServerErrorResponse({
     description: 'Internal server error or external API error',
     schema: {

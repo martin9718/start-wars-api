@@ -55,4 +55,22 @@ export const ERROR_RESPONSES = {
     details: 'User does not have access to do this action',
     status: 401,
   },
+  TOKEN_NOT_PROVIDED: {
+    errorCodeName: 'TOKEN_NOT_PROVIDED',
+    message: 'Token not provided',
+    details: 'Token has not been provided',
+    status: 401,
+  },
+  TOKEN_EXPIRED: {
+    errorCodeName: 'TOKEN_EXPIRED',
+    message: 'Token has expired',
+    details: 'Token has expired',
+    status: 401,
+  },
+  INVALID_TOKEN: {
+    errorCodeName: 'INVALID_TOKEN',
+    message: 'Token is not valid',
+    details: 'Provided authentication token is invalid',
+    status: 401,
+  },
 };

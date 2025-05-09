@@ -9,6 +9,8 @@ import { MovieExternalService } from './domain/services/movie-external-service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { SyncMoviesController } from './infrastructure/http/sync-movies/sync-movies.controller';
+import { GetAllMoviesUseCase } from './application/use-cases/get-all-movies/get-all-movies.use-case';
+import { GetAllMoviesController } from './infrastructure/http/get-all-movies/get-all-movies.controller';
 
 @Module({
   imports: [
@@ -29,8 +31,9 @@ import { SyncMoviesController } from './infrastructure/http/sync-movies/sync-mov
       useClass: SequelizeMovieRepository,
     },
     SyncMoviesUseCase,
+    GetAllMoviesUseCase,
   ],
-  controllers: [SyncMoviesController],
+  controllers: [SyncMoviesController, GetAllMoviesController],
   exports: [MovieRepository],
 })
 export class MoviesModule {}

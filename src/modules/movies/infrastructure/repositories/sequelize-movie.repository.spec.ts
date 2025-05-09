@@ -8,6 +8,7 @@ import { MovieModel } from '../../../shared/infrastructure/database/models/movie
 import { MovieExternalService } from '../../domain/services/movie-external-service';
 import { SequelizeMovieRepository } from './sequelize-movie.repository';
 import { MovieExternalServiceError } from '../../domain/errors/movie-external-service-error';
+import { MovieFactory } from '../../test/movie-factory';
 
 interface SequelizeMovieRepositoryWithPrivateMethods extends MovieRepository {
   buildMovieEntity(model: MovieModel): Movie;
@@ -17,33 +18,6 @@ describe('SequelizeMovieRepository (Integration)', () => {
   let repository: MovieRepository;
   let externalService: jest.Mocked<MovieExternalService>;
   let testHelper: TestHelper;
-
-  const movieData = [
-    {
-      title: 'A New Hope',
-      episodeId: 4,
-      openingCrawl: 'It is a period of civil war...',
-      director: 'George Lucas',
-      producer: 'Gary Kurtz, Rick McCallum',
-      releaseDate: new Date('1977-05-25'),
-      url: 'https://swapi.py4e.com/api/films/1/',
-      externalId: '1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      title: 'The Empire Strikes Back',
-      episodeId: 5,
-      openingCrawl: 'It is a dark time for the Rebellion...',
-      director: 'Irvin Kershner',
-      producer: 'Gary Kurtz, Rick McCallum',
-      releaseDate: new Date('1980-05-17'),
-      url: 'https://swapi.py4e.com/api/films/2/',
-      externalId: '2',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
 
   beforeAll(async () => {
     testHelper = new TestHelper();
@@ -75,7 +49,6 @@ describe('SequelizeMovieRepository (Integration)', () => {
 
   beforeEach(async () => {
     await testHelper.clearDatabase();
-
     jest.clearAllMocks();
   });
 
@@ -90,11 +63,9 @@ describe('SequelizeMovieRepository (Integration)', () => {
 
   describe('syncMovies', () => {
     it('should sync movies from external service', async () => {
-      externalService.fetchAllMovies.mockResolvedValue(
-        movieData.map((data) => ({
-          ...data,
-        })),
-      );
+      const movieData = MovieFactory.createDefaultMovies().slice(0, 2);
+
+      externalService.fetchAllMovies.mockResolvedValue(movieData);
 
       const result = await repository.syncMovies();
 
@@ -122,20 +93,12 @@ describe('SequelizeMovieRepository (Integration)', () => {
         external_id: '1',
       });
 
-      externalService.fetchAllMovies.mockResolvedValue([
-        {
-          title: 'A New Hope (Updated)',
-          episodeId: 4,
-          openingCrawl: 'Updated crawl',
-          director: 'George Lucas',
-          producer: 'Gary Kurtz, Rick McCallum',
-          releaseDate: new Date('1977-05-25'),
-          url: 'https://swapi.py4e.com/api/films/1/',
-          externalId: '1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
+      const updatedMovie = MovieFactory.createMovie({
+        title: 'A New Hope (Updated)',
+        openingCrawl: 'Updated crawl',
+      });
+
+      externalService.fetchAllMovies.mockResolvedValue([updatedMovie]);
 
       const result = await repository.syncMovies();
 
@@ -160,6 +123,8 @@ describe('SequelizeMovieRepository (Integration)', () => {
     });
 
     it('should rollback transaction if an error occurs during sync', async () => {
+      const movieData = MovieFactory.createDefaultMovies().slice(0, 2);
+
       externalService.fetchAllMovies.mockResolvedValue(movieData);
 
       jest.spyOn(MovieModel, 'create').mockImplementationOnce(() => {
@@ -175,21 +140,16 @@ describe('SequelizeMovieRepository (Integration)', () => {
 
   describe('findByExternalId', () => {
     it('should find a movie by external ID', async () => {
+      const movieModel = MovieFactory.createMovieModels()[0];
       await MovieModel.create({
-        title: 'Test Movie',
-        episode_id: 1,
-        opening_crawl: 'Test crawl',
-        director: 'Test Director',
-        producer: 'Test Producer',
-        release_date: new Date(),
-        url: 'https://example.com/1/',
+        ...movieModel,
         external_id: 'test-external-id',
       });
 
       const result = await repository.findByExternalId('test-external-id');
 
       expect(result).not.toBeNull();
-      expect(result?.title).toBe('Test Movie');
+      expect(result?.title).toBe('A New Hope');
       expect(result?.externalId).toBe('test-external-id');
     });
 
@@ -210,16 +170,49 @@ describe('SequelizeMovieRepository (Integration)', () => {
     });
   });
 
+  describe('findAll', () => {
+    it('should return all movies', async () => {
+      await MovieModel.bulkCreate(MovieFactory.createMovieModels());
+
+      const result = await repository.findAll();
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toBeInstanceOf(Movie);
+      expect(result[1]).toBeInstanceOf(Movie);
+      expect(result[2]).toBeInstanceOf(Movie);
+
+      expect(result[0].title).toBe('A New Hope');
+      expect(result[1].title).toBe('The Empire Strikes Back');
+      expect(result[2].title).toBe('Return of the Jedi');
+
+      expect(result[0].episodeId).toBe(4);
+      expect(result[1].episodeId).toBe(5);
+      expect(result[2].episodeId).toBe(6);
+    });
+
+    it('should return empty array when no movies exist', async () => {
+      await MovieModel.destroy({ where: {}, force: true });
+
+      const result = await repository.findAll();
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should throw DatabaseError if database operation fails', async () => {
+      jest.spyOn(MovieModel, 'findAll').mockImplementationOnce(() => {
+        throw new Error('Database connection error');
+      });
+
+      await expect(repository.findAll()).rejects.toThrow(DatabaseError);
+    });
+  });
+
   describe('buildMovieEntity', () => {
     it('should correctly map MovieModel to Movie domain entity', async () => {
+      const modelData = MovieFactory.createMovieModels()[2];
+
       const movieModel = await MovieModel.create({
-        title: 'Entity Mapping Movie',
-        episode_id: 3,
-        opening_crawl: 'Mapping test',
-        director: 'Test Director',
-        producer: 'Test Producer',
-        release_date: new Date('2020-01-01'),
-        url: 'https://example.com/3/',
+        ...modelData,
         external_id: 'mapping-test',
       });
 
@@ -238,7 +231,7 @@ describe('SequelizeMovieRepository (Integration)', () => {
       expect(result.producer).toBe(movieModel.producer);
       expect(result.releaseDate).toEqual(movieModel.release_date);
       expect(result.url).toBe(movieModel.url);
-      expect(result.externalId).toBe(movieModel.external_id);
+      expect(result.externalId).toBe('mapping-test');
     });
   });
 });

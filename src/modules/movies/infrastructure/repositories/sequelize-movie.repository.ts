@@ -115,6 +115,16 @@ export class SequelizeMovieRepository implements MovieRepository {
     }
   }
 
+  async findAll(): Promise<Movie[]> {
+    try {
+      const movies = await this.movieModel.findAll();
+
+      return movies.map((movie) => this.buildMovieEntity(movie));
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
+
   private buildMovieEntity(model: MovieModel): Movie {
     return Movie.create({
       id: model.id,

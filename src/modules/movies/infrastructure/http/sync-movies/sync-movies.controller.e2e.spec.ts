@@ -11,6 +11,8 @@ import { User } from '../../../../users/domain/entities/user';
 import { ROLES } from '../../../../users/domain/types';
 import { UserModel } from '../../../../shared/infrastructure/database/models/user.model';
 import { RoleModel } from '../../../../shared/infrastructure/database/models/role.model';
+import { MovieFactory } from '../../../test/movie-factory';
+import { UserFactory } from '../../../../users/test/user-factory';
 
 describe('SyncMoviesController (E2E)', () => {
   let app: INestApplication;
@@ -18,33 +20,6 @@ describe('SyncMoviesController (E2E)', () => {
   let movieExternalService: MovieExternalService;
   let jwtService: JwtService;
   let userRepository: UserRepository;
-
-  const mockMoviesData = [
-    {
-      title: 'A New Hope',
-      episodeId: 4,
-      openingCrawl: 'It is a period of civil war...',
-      director: 'George Lucas',
-      producer: 'Gary Kurtz, Rick McCallum',
-      releaseDate: new Date('1977-05-25'),
-      url: 'https://swapi.py4e.com/api/films/1/',
-      externalId: '1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      title: 'The Empire Strikes Back',
-      episodeId: 5,
-      openingCrawl: 'It is a dark time for the Rebellion...',
-      director: 'Irvin Kershner',
-      producer: 'Gary Kurtz, Rick McCallum',
-      releaseDate: new Date('1980-05-17'),
-      url: 'https://swapi.py4e.com/api/films/2/',
-      externalId: '2',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
 
   let adminToken: string;
   let userToken: string;
@@ -63,6 +38,7 @@ describe('SyncMoviesController (E2E)', () => {
   beforeEach(async () => {
     await testHelper.clearDatabase();
 
+    const mockMoviesData = MovieFactory.createDefaultMovies().slice(0, 2);
     jest
       .spyOn(movieExternalService, 'fetchAllMovies')
       .mockResolvedValue(mockMoviesData);
@@ -72,21 +48,9 @@ describe('SyncMoviesController (E2E)', () => {
       { id: ROLES.USER.id, name: ROLES.USER.name },
     ]);
 
-    const adminUserModel = await UserModel.create({
-      name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'hashedpassword',
-      is_active: true,
-      role_id: ROLES.ADMIN.id,
-    });
-
-    const regularUserModel = await UserModel.create({
-      name: 'Regular User',
-      email: 'user@example.com',
-      password: 'hashedpassword',
-      is_active: true,
-      role_id: ROLES.USER.id,
-    });
+    const userModels = UserFactory.createUserModels();
+    const [adminUserModel, regularUserModel] =
+      await UserModel.bulkCreate(userModels);
 
     adminToken = jwtService.sign({
       sub: adminUserModel.id,
@@ -123,15 +87,11 @@ describe('SyncMoviesController (E2E)', () => {
   });
 
   it('should update existing movies instead of creating duplicates', async () => {
+    const existingMovieData = MovieFactory.createMovieModels()[0];
     await MovieModel.create({
+      ...existingMovieData,
       title: 'Old Title',
-      episode_id: 4,
       opening_crawl: 'Old opening crawl',
-      director: 'Old Director',
-      producer: 'Old Producer',
-      release_date: new Date('1977-05-25'),
-      url: 'https://swapi.py4e.com/api/films/1/',
-      external_id: '1',
     });
 
     const response = await request(app.getHttpServer())
@@ -182,7 +142,7 @@ describe('SyncMoviesController (E2E)', () => {
   });
 
   it('should handle unhandled errors with 500 status code', async () => {
-    const genericError = new Error('Unexpected database failure');
+    const genericError = new Error('Unexpected error');
 
     const syncMoviesUseCase = app.get(SyncMoviesUseCase);
     jest
@@ -199,7 +159,7 @@ describe('SyncMoviesController (E2E)', () => {
       'INTERNAL_SERVER_ERROR',
     );
     expect(response.body.message).toBe('An unexpected error occurred');
-    expect(response.body.details).toBe('Unexpected database failure');
+    expect(response.body.details).toBe('Unexpected error');
   });
 
   it('should return 401 Unauthorized when no token is provided', async () => {
