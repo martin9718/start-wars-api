@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiUnauthorizedResponse, ApiForbiddenResponse } from '@nestjs/swagger';
+import { ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { ERROR_RESPONSES } from '../error-responses';
 
 export function ApiAuthErrors() {
@@ -24,12 +24,6 @@ export function ApiAuthErrors() {
             },
           },
         },
-      },
-    }),
-    ApiForbiddenResponse({
-      description: 'User does not have the required permissions',
-      schema: {
-        example: ERROR_RESPONSES.FORBIDDEN,
       },
     }),
   );

@@ -125,6 +125,41 @@ export class SequelizeMovieRepository implements MovieRepository {
     }
   }
 
+  async findById(id: string): Promise<Movie | null> {
+    try {
+      const movie = await this.movieModel.findOne({
+        where: { id },
+      });
+
+      if (!movie) return null;
+
+      return this.buildMovieEntity(movie);
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
+
+  async create(movie: Movie): Promise<Movie> {
+    try {
+      const modelProps = {
+        title: movie.title,
+        episode_id: movie.episodeId,
+        opening_crawl: movie.openingCrawl,
+        director: movie.director,
+        producer: movie.producer,
+        release_date: movie.releaseDate,
+        url: movie.url,
+        external_id: movie.externalId,
+      };
+
+      const model = await this.movieModel.create(modelProps);
+
+      return this.buildMovieEntity(model);
+    } catch (error) {
+      throw new DatabaseError(error);
+    }
+  }
+
   private buildMovieEntity(model: MovieModel): Movie {
     return Movie.create({
       id: model.id,

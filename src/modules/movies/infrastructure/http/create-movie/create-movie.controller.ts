@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   HttpCode,
   HttpStatus,
@@ -8,33 +9,40 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiOkResponse,
+  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
-  ApiServiceUnavailableResponse,
+  ApiBadRequestResponse,
   ApiForbiddenResponse,
 } from '@nestjs/swagger';
-import { SyncMoviesUseCase } from '../../../application/use-cases/sync-movies/sync-movies.use-case';
 import { ERROR_RESPONSES } from '../../../../shared/infrastructure/http/swagger/error-responses';
-import { SyncMoviesResponseDto } from './sync-movies-response.http-dto';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/jwt.guard';
 import { RoleGuard } from '../../../../auth/infrastructure/guards/role.guard';
 import { RequiredRoles } from '../../../../auth/infrastructure/decorators/roles.decorator';
 import { ROLES } from '../../../../users/domain/types';
+import { CreateMovieUseCase } from '../../../application/use-cases/create-movie/create-movie.use-case';
+import { CreateMovieHttpDto } from './create-movie.http-dto';
+import { Movie } from '../../../domain/entities/movie';
+import { MovieDto } from '../sync-movies/sync-movies-response.http-dto';
 import { ApiAuthErrors } from '../../../../shared/infrastructure/http/swagger/decorators/api-auth-errors.decorator';
 
 @ApiTags('movies')
 @Controller('movies')
-export class SyncMoviesController {
-  constructor(private readonly syncMoviesUseCase: SyncMoviesUseCase) {}
+export class CreateMovieController {
+  constructor(private readonly createMovieUseCase: CreateMovieUseCase) {}
 
   @ApiOperation({
-    summary: 'Sync movies from SWAPI',
-    description:
-      'Synchronizes movies from the Star Wars API. Requires admin role.',
+    summary: 'Create a new movie',
+    description: 'Creates a new movie in the database. Requires admin role.',
   })
-  @ApiOkResponse({
-    description: 'Movies synchronized successfully',
-    type: SyncMoviesResponseDto,
+  @ApiCreatedResponse({
+    description: 'Movie created successfully',
+    type: MovieDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input data',
+    schema: {
+      example: ERROR_RESPONSES.VALIDATION_ERROR,
+    },
   })
   @ApiAuthErrors()
   @ApiForbiddenResponse({
@@ -44,23 +52,21 @@ export class SyncMoviesController {
     },
   })
   @ApiInternalServerErrorResponse({
-    description: 'Internal server error or external API error',
+    description: 'Internal server error',
     schema: {
       example: ERROR_RESPONSES.INTERNAL_SERVER_ERROR,
     },
   })
-  @ApiServiceUnavailableResponse({
-    description:
-      'External service unavailable or error when connecting to SWAPI',
-    schema: {
-      example: ERROR_RESPONSES.EXTERNAL_SERVICE_ERROR,
-    },
-  })
   @UseGuards(JwtAuthGuard, RoleGuard)
   @RequiredRoles(ROLES.ADMIN.name)
-  @HttpCode(HttpStatus.OK)
-  @Post('sync')
-  async syncMovies() {
-    return this.syncMoviesUseCase.execute();
+  @HttpCode(HttpStatus.CREATED)
+  @Post()
+  async create(@Body() dto: CreateMovieHttpDto): Promise<Movie> {
+    const releaseDate = new Date(dto.releaseDate);
+
+    return this.createMovieUseCase.execute({
+      ...dto,
+      releaseDate,
+    });
   }
 }

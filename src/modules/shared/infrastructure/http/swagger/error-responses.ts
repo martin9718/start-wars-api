@@ -73,4 +73,11 @@ export const ERROR_RESPONSES = {
     details: 'Provided authentication token is invalid',
     status: 401,
   },
+  MOVIE_NOT_FOUND: {
+    errorCodeName: 'MOVIE_NOT_FOUND',
+    message: 'Movie with id a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6 not found',
+    details:
+      'No movie exists with the provided id: a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6',
+    status: 404,
+  },
 };

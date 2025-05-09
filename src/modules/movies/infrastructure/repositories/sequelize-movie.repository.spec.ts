@@ -207,6 +207,84 @@ describe('SequelizeMovieRepository (Integration)', () => {
     });
   });
 
+  describe('findById', () => {
+    it('should find a movie by ID', async () => {
+      const movieData = MovieFactory.createMovieModels()[0];
+      const createdMovie = await MovieModel.create(movieData);
+
+      const result = await repository.findById(createdMovie.id);
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(createdMovie.id);
+      expect(result?.title).toBe('A New Hope');
+      expect(result?.episodeId).toBe(4);
+      expect(result?.director).toBe('George Lucas');
+      expect(result?.externalId).toBe('1');
+    });
+
+    it('should return null if movie with ID does not exist', async () => {
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
+
+      const result = await repository.findById(nonExistentId);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw DatabaseError if database operation fails', async () => {
+      jest.spyOn(MovieModel, 'findOne').mockImplementationOnce(() => {
+        throw new Error('Database connection error');
+      });
+
+      await expect(repository.findById('any-id')).rejects.toThrow(
+        DatabaseError,
+      );
+    });
+  });
+
+  describe('create', () => {
+    it('should create a movie successfully', async () => {
+      const movieToCreate = MovieFactory.createMovie({
+        id: undefined,
+        title: 'New Test Movie',
+        episodeId: 8,
+        openingCrawl: 'Test opening crawl...',
+        director: 'Test Director',
+        producer: 'Test Producer',
+        releaseDate: new Date('2023-01-01'),
+        url: 'https://example.com/new-movie',
+        externalId: 'test-external-id-new',
+      });
+
+      const result = await repository.create(movieToCreate);
+
+      expect(result).not.toBeNull();
+      expect(result.id).toBeDefined();
+      expect(result.title).toBe('New Test Movie');
+      expect(result.episodeId).toBe(8);
+      expect(result.director).toBe('Test Director');
+      expect(result.externalId).toBe('test-external-id-new');
+
+      const movieInDb = await MovieModel.findOne({
+        where: { title: 'New Test Movie' },
+      });
+      expect(movieInDb).not.toBeNull();
+      expect(movieInDb?.title).toBe('New Test Movie');
+      expect(movieInDb?.episode_id).toBe(8);
+    });
+
+    it('should throw DatabaseError if database operation fails', async () => {
+      const movieToCreate = MovieFactory.createMovie();
+
+      jest.spyOn(MovieModel, 'create').mockImplementationOnce(() => {
+        throw new Error('Database connection error');
+      });
+
+      await expect(repository.create(movieToCreate)).rejects.toThrow(
+        DatabaseError,
+      );
+    });
+  });
+
   describe('buildMovieEntity', () => {
     it('should correctly map MovieModel to Movie domain entity', async () => {
       const modelData = MovieFactory.createMovieModels()[2];

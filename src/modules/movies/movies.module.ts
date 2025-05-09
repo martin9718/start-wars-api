@@ -11,6 +11,10 @@ import { ConfigModule } from '@nestjs/config';
 import { SyncMoviesController } from './infrastructure/http/sync-movies/sync-movies.controller';
 import { GetAllMoviesUseCase } from './application/use-cases/get-all-movies/get-all-movies.use-case';
 import { GetAllMoviesController } from './infrastructure/http/get-all-movies/get-all-movies.controller';
+import { FindMovieByIdController } from './infrastructure/http/find-by-id/find-by-id.controller';
+import { FindByIdUseCase } from './application/use-cases/find-by-id/find-by-id.use-case';
+import { CreateMovieController } from './infrastructure/http/create-movie/create-movie.controller';
+import { CreateMovieUseCase } from './application/use-cases/create-movie/create-movie.use-case';
 
 @Module({
   imports: [
@@ -32,8 +36,15 @@ import { GetAllMoviesController } from './infrastructure/http/get-all-movies/get
     },
     SyncMoviesUseCase,
     GetAllMoviesUseCase,
+    FindByIdUseCase,
+    CreateMovieUseCase,
   ],
-  controllers: [SyncMoviesController, GetAllMoviesController],
+  controllers: [
+    SyncMoviesController,
+    GetAllMoviesController,
+    FindMovieByIdController,
+    CreateMovieController,
+  ],
   exports: [MovieRepository],
 })
 export class MoviesModule {}

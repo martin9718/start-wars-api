@@ -1,40 +1,54 @@
 import {
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
-  Post,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
+  ApiNotFoundResponse,
   ApiInternalServerErrorResponse,
-  ApiServiceUnavailableResponse,
+  ApiParam,
   ApiForbiddenResponse,
 } from '@nestjs/swagger';
-import { SyncMoviesUseCase } from '../../../application/use-cases/sync-movies/sync-movies.use-case';
 import { ERROR_RESPONSES } from '../../../../shared/infrastructure/http/swagger/error-responses';
-import { SyncMoviesResponseDto } from './sync-movies-response.http-dto';
 import { JwtAuthGuard } from '../../../../auth/infrastructure/guards/jwt.guard';
 import { RoleGuard } from '../../../../auth/infrastructure/guards/role.guard';
 import { RequiredRoles } from '../../../../auth/infrastructure/decorators/roles.decorator';
 import { ROLES } from '../../../../users/domain/types';
+import { FindByIdUseCase } from '../../../application/use-cases/find-by-id/find-by-id.use-case';
+import { Movie } from '../../../domain/entities/movie';
+import { MovieDto } from '../sync-movies/sync-movies-response.http-dto';
 import { ApiAuthErrors } from '../../../../shared/infrastructure/http/swagger/decorators/api-auth-errors.decorator';
 
 @ApiTags('movies')
 @Controller('movies')
-export class SyncMoviesController {
-  constructor(private readonly syncMoviesUseCase: SyncMoviesUseCase) {}
+export class FindMovieByIdController {
+  constructor(private readonly findByIdUseCase: FindByIdUseCase) {}
 
   @ApiOperation({
-    summary: 'Sync movies from SWAPI',
-    description:
-      'Synchronizes movies from the Star Wars API. Requires admin role.',
+    summary: 'Find movie by ID',
+    description: 'Retrieves a specific movie by its ID. Requires user role.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the movie to retrieve',
+    type: String,
+    example: 'a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6',
   })
   @ApiOkResponse({
-    description: 'Movies synchronized successfully',
-    type: SyncMoviesResponseDto,
+    description: 'Movie retrieved successfully',
+    type: MovieDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Movie not found',
+    schema: {
+      example: ERROR_RESPONSES.MOVIE_NOT_FOUND,
+    },
   })
   @ApiAuthErrors()
   @ApiForbiddenResponse({
@@ -44,23 +58,16 @@ export class SyncMoviesController {
     },
   })
   @ApiInternalServerErrorResponse({
-    description: 'Internal server error or external API error',
+    description: 'Internal server error',
     schema: {
       example: ERROR_RESPONSES.INTERNAL_SERVER_ERROR,
     },
   })
-  @ApiServiceUnavailableResponse({
-    description:
-      'External service unavailable or error when connecting to SWAPI',
-    schema: {
-      example: ERROR_RESPONSES.EXTERNAL_SERVICE_ERROR,
-    },
-  })
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @RequiredRoles(ROLES.ADMIN.name)
+  @RequiredRoles(ROLES.USER.name)
   @HttpCode(HttpStatus.OK)
-  @Post('sync')
-  async syncMovies() {
-    return this.syncMoviesUseCase.execute();
+  @Get(':id')
+  async findById(@Param('id') id: string): Promise<Movie> {
+    return this.findByIdUseCase.execute(id);
   }
 }
