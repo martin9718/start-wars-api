@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './modules/shared/infrastructure/http/filters/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NotFoundExceptionFilter } from './modules/shared/infrastructure/http/filters/not-found-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,9 +18,12 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new HttpExceptionFilter());
-
   app.setGlobalPrefix('api');
+
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new NotFoundExceptionFilter(),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Star Wars API')
